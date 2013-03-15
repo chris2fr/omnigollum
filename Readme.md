@@ -3,7 +3,7 @@
 ## ACL enabled version by Akretion
 
 We extended Omnigollum to support read/write ACL.
-Access rights are set in an auth.md file at level of the directories hierarchy
+Access rights are set in an auth.md file at any level of the directories hierarchy
 using the standard markdown embedded Yaml metadata syntax.
 The advantage of this is that one can easily grant or revoke permissions just by editing an auth.md wiki page if allowed to do so.
 For instance:
@@ -32,7 +32,7 @@ But you may very well override the get_groups method to implement any backend yo
 Finally, permissions are checked from the root of the wiki to the current sub-folder.
 This makes it possible to give access to any subfolder of a given subfolder or on the contrary give access only to a given sub-folder.
 
-The following part of the documentation is the one of the original forked project, except for the user groups options example.
+The following part of the documentation is the one of the original forked project, except for the additional user groups option in the example configuration.
 
 
 ## Installation
