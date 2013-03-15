@@ -8,19 +8,19 @@ using the standard markdown embedded Yaml metadata syntax.
 The advantage of this is that one can easily grant or revoke permissions just by editing an auth.md wiki page if allowed to do so.
 For instance:
 
-`<!--
----
-:read:
-- group1
-- group2
-- foo@akretion.com
-- bar@akretion.com
-- baz@akretion.com
-- /(.*)@akretion.com$/
-:write:
-- foo@akretion.com
-- group1
-`-->
+    <!--
+    ---
+    :read:
+    - group1
+    - group2
+    - foo@akretion.com
+    - bar@akretion.com
+    - baz@akretion.com
+    - /(.*)@akretion.com$/
+    :write:
+    - foo@akretion.com
+    - group1
+    -->
 
 Notice that you can grant rights individually or as a group. You can also use a regexp syntax like
 /(.*)@akretion.com$/ to enable any user which email ends with @akretion.com.
