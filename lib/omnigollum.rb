@@ -1,4 +1,3 @@
-require 'cgi'
 require 'omniauth'
 require 'mustache/sinatra'
 require 'sinatra/base'
@@ -9,10 +8,19 @@ module Omnigollum
     class OmniauthUserInitError < StandardError; end
     
     class User
-      attr_reader :uid, :name, :email, :nickname, :provider
+      attr_reader :uid, :name, :email, :nickname, :provider, :groups
     end 
     
     class OmniauthUser < User
+      def get_groups(uid, options) #override this eventually
+        all_groups = options[:groups] || {}
+        uid_groups = []
+        all_groups.each do |k, v|
+          uid_groups << k if v.index(uid)
+        end
+        uid_groups
+      end
+
       def initialize (hash, options)
         # Validity checks, don't trust providers 
         @uid = hash['uid'].to_s.strip
@@ -31,12 +39,54 @@ module Omnigollum
         @nickname = hash['info']['nickname'].to_s.strip if hash['info'].has_key?('nickname')
         
         @provider = hash['provider']
+        @groups = get_groups(@uid, options)
         self
       end
     end    
   end
   
   module Helpers
+    def check_action(action)
+      user = session[:omniauth_user]
+      scan_path = settings.gollum_path
+      allowed = false
+      folders = params[:path] && params[:path].split('/') || params[:splat] && params[:splat][0].split('/') || []
+      #TODO when action is /history, we may need a different logic.
+      while true
+        perms = find_permissions(scan_path)
+        all_groups = user.groups + [user.uid]
+        all_groups.each do |group|
+          (perms[action] || []).each do |perm|
+            if perm == group || perm.match(/\/(.*)\//) && group.match(Regexp.new(perm[1..-2]))
+              allowed = true
+              return
+            end
+          end
+        end
+        break if folders.empty?
+        scan_path = ::File.expand_path(folders.shift, scan_path)
+      end
+      halt 403 unless allowed
+    end
+
+    def find_permissions(path)
+      if File.directory?(path) && Dir.entries(path).index("auth.md")
+        content = ::File.open(::File.expand_path('auth.md', path), 'rb').read
+        content.gsub(/\<\!--+\s+---(.*?)--+\>/m) do #Embedded yaml metadata as Gollum used to support
+#         yaml = @wiki.sanitizer.clean($1)
+          yaml = $1
+          hash = YAML.load(yaml)
+          if Hash === hash
+            return hash
+          else
+            return {}
+          end
+        end
+      else
+        return {}
+      end
+    end
+
     def user_authed?
       session.has_key? :omniauth_user
     end
@@ -123,6 +173,14 @@ module Omnigollum
         '/edit',
         '/delete/*',
         '/delete'],
+
+      :protected_read => [
+        '/*',
+        '/data/*',
+        '/history/*',
+        '/preview',
+        '/search',
+        '/fileview'],
       
       :route_prefix => '/__omnigollum__',
       :dummy_auth   => true,
@@ -275,10 +333,22 @@ module Omnigollum
       app.before options[:route_prefix] + '/auth/:provider' do 
         halt 404
       end
-      
+
       # Pre-empt protected routes
-      options[:protected_routes].each {|route| app.before(route) {user_auth unless user_authed?}}
+      options[:protected_routes].each do |route|
+        app.before(route) do
+          user_auth unless user_authed?
+          check_action(:write) unless options[:protected_read].index(route)
+        end
+      end
       
+      options[:protected_read].each do |route|
+        app.before(route) do
+          user_auth unless user_authed?
+          check_action(:read)
+        end
+      end
+
       # Write the actual config back to the app instance
       app.set(:omnigollum, options)
     end
