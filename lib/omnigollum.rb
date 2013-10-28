@@ -174,6 +174,7 @@ module Omnigollum
         '/delete/*',
         '/delete'],
 
+      :check_acl => false,
       :protected_read => [
         '/*',
         '/data/*',
@@ -350,16 +351,18 @@ module Omnigollum
       options[:protected_routes].each do |route|
         app.before(route) do
           user_auth unless user_authed?
-          #FIXME is that really what we want: checking read action for edit for instance??? 
-          #FIXME so we remove that unless then?
-          check_action(:write) unless options[:protected_read].index(route)
+          if options[:check_acl]
+            #FIXME is that really what we want: checking read action for edit for instance??? 
+            #FIXME so we remove that unless then?
+            check_action(:write) unless options[:protected_read].index(route)
+          end
         end
       end
       
       options[:protected_read].each do |route|
         app.before(route) do
           user_auth unless user_authed?
-          check_action(:read)
+          check_action(:read) if options[:check_acl]
         end
       end
 

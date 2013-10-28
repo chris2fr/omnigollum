@@ -86,6 +86,7 @@ options = {
     provider :open_id, OpenID::Store::Filesystem.new('/tmp')
   end,
   :dummy_auth => false
+  :check_acl => true, # enable ACL checking (default is disabled)
   :groups => {:group1 => ['foo@akretion.com', 'bar@akretion.com'], :group2 =>['bar@akretion.com', 'baz@akretion.com']}
 }
 
