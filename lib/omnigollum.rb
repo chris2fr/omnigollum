@@ -46,12 +46,16 @@ module Omnigollum
   end
 
   module Helpers
-    def check_action(action)
+    def check_action(action, route)
       user = session[:omniauth_user]
       scan_path = settings.gollum_path
       allowed = false
-      folders = params[:path] && params[:path].split('/') || params[:splat] && params[:splat][0].split('/') || []
-      #TODO when action is /history, we may need a different logic.
+      if route == '/fileview'
+        folders = []
+      else
+        folders = params[:path] && params[:path].split('/') || params[:splat] && params[:splat][0].split('/') || []
+        folders.shift if folders[0] == route.gsub(/\/\*/, '')
+      end
       while true
         perms = find_permissions(scan_path)
         all_groups = user.groups + [user.uid]
@@ -65,6 +69,7 @@ module Omnigollum
         end
         break if folders.empty?
         scan_path = ::File.expand_path(folders.shift, scan_path)
+        break unless ::File.directory?(scan_path)
       end
       halt 403 unless allowed
     end
@@ -354,7 +359,7 @@ module Omnigollum
           if options[:check_acl]
             #FIXME is that really what we want: checking read action for edit for instance??? 
             #FIXME so we remove that unless then?
-            check_action(:write) unless options[:protected_read].index(route)
+            check_action(:write, route) unless options[:protected_read].index(route)
           end
         end
       end
@@ -362,7 +367,7 @@ module Omnigollum
       options[:protected_read].each do |route|
         app.before(route) do
           user_auth unless user_authed?
-          check_action(:read) if options[:check_acl]
+          check_action(:read, route) if options[:check_acl]
         end
       end
 
