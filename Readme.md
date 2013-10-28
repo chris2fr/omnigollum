@@ -35,13 +35,29 @@ This makes it possible to give access to any subfolder of a given subfolder or o
 The following part of the documentation is the one of the original forked project, except for the additional user groups option in the example configuration.
 
 
+## Quick Installation/Configuration
+
+```sh
+$ git clone https://github.com/arr2036/omnigollum.git
+$ cd omnigollum
+$ gem build omnigollum.gemspec
+$ gem install omnigollum*.gem
+```
+
+```sh
+$ cp config.rb.example config.rb
+```
+Customize config.rb to use your preferred omniauth strategy.
+
+Execute via Gollum
+```sh
+$ gollum --config config.rb
+```
+
 ## Installation
-
-### Manual
-
-Clone into your ruby library path.
-
-    git clone git://github.com/arr2036/omnigollum.git
+```sh
+$ gem install omnigollum
+```
 
 ## Configuration
 
@@ -75,6 +91,25 @@ options = {
 
 # :omnigollum options *must* be set before the Omnigollum extension is registered
 Precious::App.set(:omnigollum, options)
+```
+
+### Access control
+
+By default, any authenticated user will be able to access the protected routes. Restrict this by setting the `authorized_users` option.
+
+`authorized_users` accepts an array of emails. Users must authenticate with one of these authorized emails in order to be allowed access.
+
+```ruby
+options[:authorized_users] = ["example0@example.org", "example1@example.org", "example2@example.org"]
+```
+
+Instead of setting these directly, you can use an [env var](http://www.12factor.net/config), maybe like this:
+
+```ruby
+# in .env, or other
+# OMNIGOLLUM_AUTHORIZED_USERS=example0@example.org,example1@example.org,example2@example.org
+
+options[:authorized_users] = ENV["OMNIGOLLUM_AUTHORIZED_USERS"].split(",")
 ```
 
 ### Register omnigollum extension with sinatra
