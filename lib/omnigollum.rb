@@ -47,7 +47,9 @@ module Omnigollum
 
   module Helpers
     def check_action(action, route)
-      user_auth unless user_authed?
+      if action != :read && !user_authed?
+        user_auth
+      end
       user = session[:omniauth_user]
       scan_path = settings.gollum_path
       allowed = false
@@ -59,7 +61,11 @@ module Omnigollum
       end
       while true
         perms = find_permissions(scan_path)
-        all_groups = user.groups + [user.uid]
+        if user
+          all_groups = user.groups + [user.email, 'Known']
+        else
+          all_groups = ['All']
+        end
         all_groups.each do |group|
           (perms[action] || []).each do |perm|
             if perm == group || perm.match(/\/(.*)\//) && group.match(Regexp.new(perm[1..-2]))
@@ -72,10 +78,16 @@ module Omnigollum
         scan_path = ::File.expand_path(folders.shift, scan_path)
         break unless ::File.directory?(scan_path)
       end
-      halt 403 unless allowed
+      unless allowed
+        if user_authed?
+          halt 403, 'Forbidden: you do not have sufficient privileges for this action! (#{action}). You may ask a wiki administrator to give you the right for #{action} in the auth.md ACL file of the page directory or of some parent directory.'
+        else
+          user_auth
+        end
+      end
     end
 
-    def find_permissions(path)
+    def find_permissions(path) #TODO implement some kind of caching may be?
       if File.directory?(path) && Dir.entries(path).index("auth.md")
         content = ::File.open(::File.expand_path('auth.md', path), 'rb').read
         content.gsub(/\<\!--+\s+---(.*?)--+\>/m) do #Embedded yaml metadata as Gollum used to support
@@ -362,9 +374,7 @@ module Omnigollum
         options[route_group].each do |route|
           app.before(route) do
             if options[:check_acl]
-              #FIXME is that really what we want: checking read action for edit for instance??? 
-              #FIXME so we remove that unless then?
-              check_action(action, route)# unless options[:protected_read].index(route)
+              check_action(action, route)
             else
               user_auth unless user_authed?
             end
@@ -376,7 +386,7 @@ module Omnigollum
         route_group = :protected_read_routes
         options[route_group].each do |route|
           app.before(route) do
-            check_action(:read, route)# unless options[:protected_read].index(route)
+            check_action(:read, route)
           end
         end
       end
