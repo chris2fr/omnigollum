@@ -47,6 +47,7 @@ module Omnigollum
 
   module Helpers
     def check_action(action, route)
+      user_auth unless user_authed?
       user = session[:omniauth_user]
       scan_path = settings.gollum_path
       allowed = false
@@ -169,26 +170,28 @@ module Omnigollum
     class << self; attr_accessor :default_options; end
 
     @default_options = {
-      :protected_routes => [
-        '/revert/*',
-        '/revert',
+      :check_acl => false,
+      :protected_create_routes => [
         '/create/*',
         '/create',
-        '/edit/*',
-        '/edit',
-        '/delete/*',
-        '/delete'],
-
-      :check_acl => false,
-      :protected_read => [
+      ],
+      :protected_read_routes => [
         '/*',
         '/data/*',
         '/history/*',
-        '/compare/*'
-        '/preview',
-        '/edit/*',
+        '/compare/*',
+        '/preview', #FIXME? *
 #        '/search',
         '/fileview'],
+      :protected_update_routes => [
+        '/edit/*',
+        '/edit',
+        '/rename/*',
+        '/revert/*',
+        '/revert'],
+      :protected_delete_routes => [
+        '/delete/*',
+        '/delete'],
       
       :route_prefix => '/__omnigollum__',
       :dummy_auth   => true,
@@ -205,6 +208,7 @@ module Omnigollum
       :authorized_users => [],
       :author_format => Proc.new { |user| user.nickname ? user.name + ' (' + user.nickname + ')' : user.name },
     }
+    @default_options[:protected_routes] = @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes]
 
     def initialize
       @default_options = self.class.default_options
@@ -353,23 +357,30 @@ module Omnigollum
       end
 
       # Pre-empt protected routes
-      options[:protected_routes].each do |route|
-        app.before(route) do
-          user_auth unless user_authed?
-          if options[:check_acl]
-            #FIXME is that really what we want: checking read action for edit for instance??? 
-            #FIXME so we remove that unless then?
-            check_action(:write, route) unless options[:protected_read].index(route)
+      [:create, :update, :delete].each do |action|
+        route_group = "protected_#{action}_routes".to_sym
+        options[route_group].each do |route|
+          app.before(route) do
+            if options[:check_acl]
+              #FIXME is that really what we want: checking read action for edit for instance??? 
+              #FIXME so we remove that unless then?
+              check_action(action, route)# unless options[:protected_read].index(route)
+            else
+              user_auth unless user_authed?
+            end
           end
         end
       end
-      
-      options[:protected_read].each do |route|
-        app.before(route) do
-          user_auth unless user_authed?
-          check_action(:read, route) if options[:check_acl]
+
+      if options[:check_acl]
+        route_group = :protected_read_routes
+        options[route_group].each do |route|
+          app.before(route) do
+            check_action(:read, route)# unless options[:protected_read].index(route)
+          end
         end
       end
+
 
       # Write the actual config back to the app instance
       app.set(:omnigollum, options)
