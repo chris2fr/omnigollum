@@ -2,7 +2,7 @@
 
 ## ACL enabled version by Akretion
 
-We extended Omnigollum to support read/write ACL.
+We extended Omnigollum to support ACL on CRUD (create, read, update, delete) actions.
 
 By default ACL checking is disabled and it behaves as the original omnigollum version where create, update and deleteactions require a login and that login may belong to a restricted list of enabled authors.
 
