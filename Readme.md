@@ -4,7 +4,7 @@
 
 We extended Omnigollum to support ACL on CRUD (create, read, update, delete) actions.
 
-By default ACL checking is disabled and it behaves as the original omnigollum version where create, update and deleteactions require a login and that login may belong to a restricted list of enabled authors.
+By default ACL checking is disabled and it behaves as the original omnigollum version where create, update and delete actions require a login and that login may belong to a restricted list of enabled authors.
 
 To activate the ACL instead, you should set the :check_acl option to true in the options you pass to Gollum:
 
