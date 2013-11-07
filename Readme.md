@@ -3,6 +3,17 @@
 ## ACL enabled version by Akretion
 
 We extended Omnigollum to support read/write ACL.
+
+By default ACL checking is disabled and it behaves as the original omnigollum version where create, update and deleteactions require a login and that login may belong to a restricted list of enabled authors.
+
+To activate the ACL instead, you should set the :check_acl option to true in the options you pass to Gollum:
+
+    options = {
+       ...
+       :check_acl => true
+    }
+
+
 Access rights are set in an auth.md file at any level of the directories hierarchy
 using the standard markdown embedded Yaml metadata syntax.
 The advantage of this is that one can easily grant or revoke permissions just by editing an auth.md wiki page if allowed to do so.
@@ -17,7 +28,7 @@ For instance:
     - bar@akretion.com
     - baz@akretion.com
     - /(.*)@akretion.com$/
-    :write:
+    :update:
     - foo@akretion.com
     - group1
     -->
@@ -29,7 +40,12 @@ By default user groups are passed as a hardcoded option in your config.ru file.
 See the example in the 'Set configuration' section below.
 But you may very well override the get_groups method to implement any backend you want.
 
-Finally, permissions are checked from the root of the wiki to the current sub-folder.
+Special groups (this is inspired from MoinMoin ACL http://moinmo.in/HelpOnAccessControlLists)
+
+  - All: all users can do the action. Useful to enable anonymous read in some directory.
+  - Known: any logged user.
+
+Finally, permissions are checked from the root of the wiki to the sub-folder of the current page.
 This makes it possible to give access to any subfolder of a given subfolder or on the contrary give access only to a given sub-folder.
 
 The following part of the documentation is the one of the original forked project, except for the additional user groups option in the example configuration.
