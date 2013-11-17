@@ -80,7 +80,7 @@ module Omnigollum
       end
       unless allowed
         if user_authed?
-          halt 403, 'Forbidden: you do not have sufficient privileges for this action! (#{action}). You may ask a wiki administrator to give you the right for #{action} in the auth.md ACL file of the page directory or of some parent directory.'
+          halt 403, "Forbidden: you do not have sufficient privileges for this action! (#{action}). You may ask a wiki administrator to give you the right for #{action} in the auth.md ACL file of the page directory or of some parent directory. You belong to the following groups: #{all_groups.inspect}"
         else
           user_auth
         end
@@ -382,6 +382,7 @@ module Omnigollum
         end
       end
 
+      # Pre-empt read routes, but only if ACL mode is enabled
       if options[:check_acl]
         route_group = :protected_read_routes
         options[route_group].each do |route|
