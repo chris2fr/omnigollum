@@ -87,7 +87,7 @@ module Omnigollum
       end
     end
 
-    def find_permissions(path) #TODO implement some kind of caching may be?
+    def find_permissions(path) #TODO implement some kind of caching may be? Also look at Gollum::Page#find_sub_page
       if File.directory?(path) && Dir.entries(path).index("auth.md")
         content = ::File.open(::File.expand_path('auth.md', path), 'rb').read
         content.gsub(/\<\!--+\s+---(.*?)--+\>/m) do #Embedded yaml metadata as Gollum used to support
@@ -279,7 +279,7 @@ module Omnigollum
       app.helpers Helpers
 
       # Enable sinatra session support
-      app.set :sessions,  true
+      app.use Rack::Session::Cookie
 
       # Setup omniauth providers
       if !options[:providers].nil?
