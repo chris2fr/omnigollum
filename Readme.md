@@ -120,7 +120,7 @@ By default, any authenticated user will be able to access the protected routes. 
 options[:authorized_users] = ["example0@example.org", "example1@example.org", "example2@example.org"]
 ```
 
-Instead of setting these directly, you can use an [env var](http://www.12factor.net/config), maybe like this:
+Instead of setting these directly, you can use an env var, maybe like this:
 
 ```ruby
 # in .env, or other
@@ -136,18 +136,9 @@ Precious::App.register Omnigollum::Sinatra
 
 ## Required patches
 
-### mustache
-
-https://github.com/defunkt/mustache
-
-Must be at v0.99.5 (currently unreleased), replace the gem version with 6c4e12d58844d99909df or
-the current HEAD.
-
-Feel free to complain loudly that the maintainer should roll a new gem.
-
 ### Gollum
-You can also (optionally) apply the patches here, to get a neat little auth
-status widget in the top right corner of the page https://github.com/arr2036/gollum/commit/32de2cad920ccc6e955b8e19f6e23c2b3b4c8964
+You can (optionally) apply the patches here, to get a neat little auth
+status widget in the top right corner of the page https://github.com/arr2036/gollum/commit/30857db6ba5a2100c0d392cb0de205e644430d13
 
 
 
