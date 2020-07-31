@@ -4,13 +4,13 @@
   <h3>{{subtext}}</h3>  
   <ul class="actions">
     {{#providers_active}}
-      <li class="minibutton">
-          <a style="height:auto" href="{{{provider_url}}}">
-            {{#image}}
-              <img src="{{{image}}}" alt="{{image_alt}}" title="{{image_title}}"/>
-            {{/image}}
-            <div style="text-align: center">{{{name}}}</div>
-          </a>
+      <li class="minibutton" style="list-style:none">
+        <a style="height:auto; border:2px solid #bbb; padding:5px; margin:5px; display:inline-block" href="{{{provider_url}}}">
+          {{#image}}
+            <img src="{{{image}}}" alt="{{image_alt}}" title="{{image_title}}"/>
+          {{/image}}
+          <span style="text-align:center; display:block">{{{name}}}</span>
+        </a>
       </li>
     {{/providers_active}}
   </ul>
