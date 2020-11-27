@@ -122,34 +122,6 @@ module Omnigollum
     class << self; attr_accessor :default_options; end
 
     @default_options = {
-<<<<<<< HEAD
-      # # Gollum 4 uses /create, /create/*, etc, while Gollum 5 uses
-      # # /gollum/create, /gollum/create/*, etc.  Protect both by
-      # # default so that omnigollum works with either out of the box.
-      # :protected_routes => [
-      #                       'create',
-      #                       'delete',
-      #                       'edit',
-      #                       'rename',
-      #                       'revert',
-      #                       'upload',
-      #                      ].map { |x|
-      #   ["/#{x}", "/#{x}/*"].map { |y|
-      #     [y, "/gollum#{y}"]
-      #   }
-      # }.flatten,
-      :check_acl => false,
-      :protected_search_routes => [
-        '/search'
-      ].map { |x|
-        ["/#{x}", "/#{x}/*"].map { |y|
-          [y, "/gollum#{y}"]
-        }
-      }.flatten,
-      :protected_create_routes => [
-        '/create'
-      ].map { |x|
-=======
       # Gollum 4 uses /create, /create/*, etc, while Gollum 5 uses
       # /gollum/create, /gollum/create/*, etc.  Protect both by
       # default so that omnigollum works with either out of the box.
@@ -161,42 +133,10 @@ module Omnigollum
                             'revert',
                             'upload',
                            ].map { |x|
->>>>>>> parent of 831bbe6... Merge remote-tracking branch 'akretion/master' into master
         ["/#{x}", "/#{x}/*"].map { |y|
           [y, "/gollum#{y}"]
         }
       }.flatten,
-<<<<<<< HEAD
-      :protected_read_routes => [
-        '/*',
-        '/data',
-        '/history',
-        '/compare',
-        '/preview', #FIXME? *
-#        '/search',
-        '/fileview'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
-      :protected_update_routes => [
-        '/edit',
-        '/rename',
-        '/revert'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
-      :protected_delete_routes => [
-        '/delete'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
-      
-=======
-
->>>>>>> parent of 831bbe6... Merge remote-tracking branch 'akretion/master' into master
       :route_prefix => '/__omnigollum__',
       :dummy_auth   => true,
       :providers    => Proc.new { provider :github, '', '' },
@@ -213,10 +153,6 @@ module Omnigollum
       :author_format => Proc.new { |user| user.nickname ? user.name + ' (' + user.nickname + ')' : user.name },
       :author_email => Proc.new { |user| user.email }
     }
-<<<<<<< HEAD
-    @default_options[:protected_routes] = @default_options[:protected_search_routes] + @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes] + @default_options[:protected_read_routes]
-=======
->>>>>>> parent of 831bbe6... Merge remote-tracking branch 'akretion/master' into master
 
     def initialize
       @default_options = self.class.default_options
