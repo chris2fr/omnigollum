@@ -138,20 +138,9 @@ module Omnigollum
       #   }
       # }.flatten,
       :check_acl => false,
-      :protected_search_routes => [
-        '/search'
-      ].map { |x|
-        ["/#{x}", "/#{x}/*"].map { |y|
-          [y, "/gollum#{y}"]
-        }
-      }.flatten,
       :protected_create_routes => [
         '/create'
-      ].map { |x|
-        ["/#{x}", "/#{x}/*"].map { |y|
-          [y, "/gollum#{y}"]
-        }
-      }.flatten,
+      ],
       :protected_read_routes => [
         '/*',
         '/data',
@@ -159,25 +148,13 @@ module Omnigollum
         '/compare',
         '/preview', #FIXME? *
 #        '/search',
-        '/fileview'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
+        '/fileview'],
       :protected_update_routes => [
         '/edit',
         '/rename',
-        '/revert'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
+        '/revert'],
       :protected_delete_routes => [
-        '/delete'].map { |x|
-          ["/#{x}", "/#{x}/*"].map { |y|
-            [y, "/gollum#{y}"]
-          }
-        }.flatten,
+        '/delete'],
       
       :route_prefix => '/__omnigollum__',
       :dummy_auth   => true,
@@ -195,7 +172,7 @@ module Omnigollum
       :author_format => Proc.new { |user| user.nickname ? user.name + ' (' + user.nickname + ')' : user.name },
       :author_email => Proc.new { |user| user.email }
     }
-    @default_options[:protected_routes] = @default_options[:protected_search_routes] + @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes] + @default_options[:protected_read_routes]
+    @default_options[:protected_routes] = @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes] + @default_options[:protected_read_routes]
 
     def initialize
       @default_options = self.class.default_options
