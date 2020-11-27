@@ -206,16 +206,14 @@ module Omnigollum
       # }.flatten,
       :check_acl => false,
       :protected_search_routes => [
-        '/search/*',
-        '/search',
+        '/search'
       ].map { |x|
         ["/#{x}", "/#{x}/*"].map { |y|
           [y, "/gollum#{y}"]
         }
       }.flatten,
       :protected_create_routes => [
-        '/create/*',
-        '/create',
+        '/create'
       ].map { |x|
         ["/#{x}", "/#{x}/*"].map { |y|
           [y, "/gollum#{y}"]
@@ -223,9 +221,9 @@ module Omnigollum
       }.flatten,
       :protected_read_routes => [
         '/*',
-        '/data/*',
-        '/history/*',
-        '/compare/*',
+        '/data',
+        '/history',
+        '/compare',
         '/preview', #FIXME? *
 #        '/search',
         '/fileview'].map { |x|
@@ -234,17 +232,14 @@ module Omnigollum
           }
         }.flatten,
       :protected_update_routes => [
-        '/edit/*',
         '/edit',
-        '/rename/*',
-        '/revert/*',
+        '/rename',
         '/revert'].map { |x|
           ["/#{x}", "/#{x}/*"].map { |y|
             [y, "/gollum#{y}"]
           }
         }.flatten,
       :protected_delete_routes => [
-        '/delete/*',
         '/delete'].map { |x|
           ["/#{x}", "/#{x}/*"].map { |y|
             [y, "/gollum#{y}"]
@@ -267,7 +262,7 @@ module Omnigollum
       :author_format => Proc.new { |user| user.nickname ? user.name + ' (' + user.nickname + ')' : user.name },
       :author_email => Proc.new { |user| user.email }
     }
-    @default_options[:protected_routes] = @default_options[:protected_search_routes] + @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes]
+    @default_options[:protected_routes] = @default_options[:protected_search_routes] + @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes] + @default_options[:protected_read_routes]
 
     def initialize
       @default_options = self.class.default_options
