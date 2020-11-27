@@ -9,10 +9,19 @@ module Omnigollum
     class OmniauthUserInitError < StandardError; end
 
     class User
-      attr_reader :uid, :name, :email, :nickname, :provider
+      attr_reader :uid, :name, :email, :nickname, :provider, :groups
     end
 
     class OmniauthUser < User
+      def get_groups(uid, options) #override this eventually
+        all_groups = options[:groups] || {}
+        uid_groups = []
+        all_groups.each do |k, v|
+          uid_groups << k if v.index(uid)
+        end
+        uid_groups
+      end
+
       def initialize (hash, options)
         # Validity checks, don't trust providers
         @uid = hash['uid'].to_s.strip
@@ -32,12 +41,73 @@ module Omnigollum
 
         @provider = hash['provider']
 
+        @groups = get_groups(@uid, options)
+
         self
       end
     end
   end
 
   module Helpers
+    def check_action(action, route)
+      if action != :read && !user_authed?
+        user_auth
+      end
+      user = session[:omniauth_user]
+      scan_path = settings.gollum_path
+      allowed = false
+      if route == '/fileview'
+        folders = []
+      else
+        folders = params[:path] && params[:path].split('/') || params[:splat] && params[:splat][0].split('/') || []
+        folders.shift if folders[0] == route.gsub(/\/\*/, '')
+      end
+      while true
+        perms = find_permissions(scan_path)
+        if user
+          all_groups = user.groups + [user.email, 'Known']
+        else
+          all_groups = ['All']
+        end
+        all_groups.each do |group|
+          (perms[action] || []).each do |perm|
+            if perm == group || perm.match(/\/(.*)\//) && group.match(Regexp.new(perm[1..-2]))
+              allowed = true
+              return
+            end
+          end
+        end
+        break if folders.empty?
+        scan_path = ::File.expand_path(folders.shift, scan_path)
+        break unless ::File.directory?(scan_path)
+      end
+      unless allowed
+        if user_authed?
+          halt 403, "Forbidden: you do not have sufficient privileges for this action! (#{action}). You may ask a wiki administrator to give you the right for #{action} in the auth.md ACL file of the page directory or of some parent directory. You belong to the following groups: #{all_groups.inspect}"
+        else
+          user_auth
+        end
+      end
+    end
+
+    def find_permissions(path) #TODO implement some kind of caching may be? Also look at Gollum::Page#find_sub_page
+      if File.directory?(path) && Dir.entries(path).index("auth.md")
+        content = ::File.open(::File.expand_path('auth.md', path), 'rb').read
+        content.gsub(/\<\!--+\s+---(.*?)---+\s+--\>/m) do #Embedded yaml metadata as Gollum used to support
+#         yaml = @wiki.sanitizer.clean($1)
+          yaml = $1
+          hash = YAML.load(yaml)
+          if Hash === hash
+            return hash
+          else
+            return {}
+          end
+        end
+      else
+        return {}
+      end
+    end
+
     def user_authed?
       session.has_key? :omniauth_user
     end
@@ -139,21 +209,25 @@ module Omnigollum
       # }.flatten,
       :check_acl => false,
       :protected_create_routes => [
-        '/create'
+        '/create/*',
+        '/create',
       ],
       :protected_read_routes => [
         '/*',
-        '/data',
-        '/history',
-        '/compare',
+        '/data/*',
+        '/history/*',
+        '/compare/*',
         '/preview', #FIXME? *
 #        '/search',
         '/fileview'],
       :protected_update_routes => [
+        '/edit/*',
         '/edit',
-        '/rename',
+        '/rename/*',
+        '/revert/*',
         '/revert'],
       :protected_delete_routes => [
+        '/delete/*',
         '/delete'],
       
       :route_prefix => '/__omnigollum__',
@@ -172,7 +246,7 @@ module Omnigollum
       :author_format => Proc.new { |user| user.nickname ? user.name + ' (' + user.nickname + ')' : user.name },
       :author_email => Proc.new { |user| user.email }
     }
-    @default_options[:protected_routes] = @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes] + @default_options[:protected_read_routes]
+    @default_options[:protected_routes] = @default_options[:protected_update_routes] + @default_options[:protected_create_routes] + @default_options[:protected_delete_routes]
 
     def initialize
       @default_options = self.class.default_options
@@ -233,6 +307,9 @@ module Omnigollum
       # Enable sinatra session support
       app.set :sessions,  true
 
+            # Enable sinatra session support
+            # app.use Rack::Session::Cookie
+
       # Setup omniauth providers
       if !options[:providers].nil?
         app.use OmniAuth::Builder, &options[:providers]
@@ -243,7 +320,7 @@ module Omnigollum
 
       # Populates instance variables used to display currently logged in user
       app.before '/*' do
-        @omnigollum_enabled = true
+        # @omnigollum_enabled = true  # chris2fr FIXME
         @user_authed = user_authed?
         @user        = get_user
       end
@@ -329,8 +406,32 @@ module Omnigollum
         halt 404
       end
 
-      # Pre-empt protected routes
-      options[:protected_routes].each {|route| app.before(route) {user_auth unless user_authed?}}
+      # # Pre-empt protected routes
+      # options[:protected_routes].each {|route| app.before(route) {user_auth unless user_authed?}}
+
+            # Pre-empt protected routes
+            [:create, :update, :delete].each do |action|
+              route_group = "protected_#{action}_routes".to_sym
+              options[route_group].each do |route|
+                app.before(route) do
+                  if options[:check_acl]
+                    check_action(action, route)
+                  else
+                    user_auth unless user_authed?
+                  end
+                end
+              end
+            end
+      
+            # Pre-empt read routes, but only if ACL mode is enabled
+            if options[:check_acl]
+              route_group = :protected_read_routes
+              options[route_group].each do |route|
+                app.before(route) do
+                  check_action(:read, route)
+                end
+              end
+            end
 
       # Write the actual config back to the app instance
       app.set(:omnigollum, options)
