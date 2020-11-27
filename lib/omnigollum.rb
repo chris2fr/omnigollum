@@ -16,17 +16,17 @@ module Omnigollum
       def initialize (hash, options)
         # Validity checks, don't trust providers
         @uid = hash['uid'].to_s.strip
-        raise OmniauthUserInitError, "Insufficient data from authentication provider, uid not provided or empty" if @uid.empty?
+        raise OmniauthUserInitError, "Pas compris // Insufficient data from authentication provider, uid not provided or empty" if @uid.empty?
 
         @name = hash['info']['name'].to_s.strip if hash['info'].has_key?('name')
         @name = options[:default_name] if !@name || @name.empty?
 
-        raise OmniauthUserInitError, "Insufficient data from authentication provider, name not provided or empty" if !@name || @name.empty?
+        raise OmniauthUserInitError, "Pas compris // Insufficient data from authentication provider, name not provided or empty" if !@name || @name.empty?
 
         @email = hash['info']['email'].to_s.strip if hash['info'].has_key?('email')
         @email = options[:default_email] if !@email || @email.empty?
 
-        raise OmniauthUserInitError, "Insufficient data from authentication provider, email not provided or empty" if !@email || @email.empty?
+        raise OmniauthUserInitError, "Pas compris // Insufficient data from authentication provider, email not provided or empty" if !@email || @email.empty?
 
         @nickname = hash['info']['nickname'].to_s.strip if hash['info'].has_key?('nickname')
 
@@ -43,8 +43,8 @@ module Omnigollum
     end
 
     def user_auth
-      @title   = 'Authentication is required'
-      @subtext = 'Please choose a login service'
+      @title   = 'Authentication is required // Authentification requise'
+      @subtext = 'Please choose a login service // Merci de choisir un mode d\'identification'
       show_login
     end
 
@@ -249,8 +249,8 @@ module Omnigollum
 
       app.before options[:route_prefix] + '/auth/failure' do
         user_deauth
-        @title    = 'Authentication failed'
-        @subtext = "Provider did not validate your credentials (#{params[:message]}) - please retry or choose another login service"
+        @title    = 'Echec // Authentication failed'
+        @subtext = "L\'authorité choisi ne vous reconnait point. Essayer, peut-être avec une autre. // Provider did not validate your credentials (#{params[:message]}) - please retry or choose another login service"
         @auth_params = "?origin=#{CGI.escape(request.env['omniauth.origin'])}" unless request.env['omniauth.origin'].nil?
         show_error
       end
@@ -271,8 +271,8 @@ module Omnigollum
 
             # Check authorized users
             if !user_authorized
-              @title   = 'Authorization failed'
-              @subtext = 'User was not found in the authorized users list'
+              @title   = 'Authorization failed // Echec d\'authorisation'
+              @subtext = 'User was not found in the authorized users list // Vous n\'êtes pas sur la liste'
               @auth_params = "?origin=#{CGI.escape(request.env['omniauth.origin'])}" unless request.env['omniauth.origin'].nil?
               show_error
             end
@@ -287,13 +287,13 @@ module Omnigollum
 
             redirect request.env['omniauth.origin']
           elsif !user_authed?
-            @title   = 'Authentication failed'
-            @subtext = 'Omniauth experienced an error processing your request'
+            @title   = 'Echec // Authentication failed'
+            @subtext = 'Erreur interne à moi // Omniauth experienced an error processing your request'
             @auth_params = "?origin=#{CGI.escape(request.env['omniauth.origin'])}" unless request.env['omniauth.origin'].nil?
             show_error
           end
         rescue StandardError => fail_reason
-          @title   = 'Authentication failed'
+          @title   = 'Echec // Authentication failed'
           @subtext = fail_reason
           @auth_params = "?origin=#{CGI.escape(request.env['omniauth.origin'])}" unless request.env['omniauth.origin'].nil?
           show_error
