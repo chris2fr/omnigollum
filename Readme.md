@@ -3,7 +3,7 @@
 ## Quick Installation/Configuration
 
 ```sh
-$ git clone https://github.com/arr2036/omnigollum.git
+$ git clone https://github.com/chris2fr/omnigollum.git
 $ cd omnigollum
 $ gem build omnigollum.gemspec
 $ gem install omnigollum*.gem
