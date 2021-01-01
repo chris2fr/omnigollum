@@ -9,10 +9,19 @@ module Omnigollum
     class OmniauthUserInitError < StandardError; end
 
     class User
-      attr_reader :uid, :name, :email, :nickname, :provider
+      attr_reader :uid, :name, :email, :nickname, :provider, :groups
     end
 
     class OmniauthUser < User
+      def get_groups(uid, options) #override this eventually
+        all_groups = options[:groups] || {}
+        uid_groups = []
+        all_groups.each do |k, v|
+          uid_groups << k if v.index(uid)
+        end
+        uid_groups
+      end
+
       def initialize (hash, options)
         # Validity checks, don't trust providers
         @uid = hash['uid'].to_s.strip
@@ -220,6 +229,7 @@ module Omnigollum
       :protected_delete_routes => [
         '/delete/*',
         '/delete'],
+      
       :route_prefix => '/__omnigollum__',
       :dummy_auth   => true,
       :providers    => Proc.new { provider :github, '', '' },
@@ -296,6 +306,7 @@ module Omnigollum
 
       # Enable sinatra session support
       app.set :sessions,  true
+
             # Enable sinatra session support
             # app.use Rack::Session::Cookie
 

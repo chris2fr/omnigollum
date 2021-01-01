@@ -1,6 +1,6 @@
 Gem::Specification.new do |s| 
   s.name              = "omnigollum"
-  s.version           = '0.2.0'
+  s.version           = '0.2.1'
   s.date              = Time.now.strftime('%Y-%m-%d')
   s.summary           = "Omnigollum makes it easy to use OmniAuth with Gollum"
   s.homepage          = "https://github.com/chris2fr/omnigollum"
